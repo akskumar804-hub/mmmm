@@ -1,55 +1,35 @@
 const nodemailer = require('nodemailer');
 
-let cachedTransport = null;
+let transporter;
 
-function buildTransport() {
-  if (cachedTransport) return cachedTransport;
+function getTransport() {
+  if (transporter) return transporter;
 
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    console.warn('⚠️ SMTP not fully configured. Emails will NOT be sent.');
-    return null;
-  }
-
-  const transport = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // correct
-    auth: { user, pass }
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: false, // MUST be false for 587
+    auth: {
+      user: process.env.SMTP_USER, // "apikey"
+      pass: process.env.SMTP_PASS  // Brevo SMTP key
+    },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000
   });
 
-  // 🔥 verify once at startup
-  transport.verify()
-    .then(() => console.log('✅ SMTP connection verified'))
-    .catch(err => {
-      console.error('❌ SMTP verification failed:', err.message);
-    });
+  transporter.verify()
+    .then(() => console.log('✅ Brevo SMTP verified'))
+    .catch(err => console.error('❌ Brevo SMTP error:', err.message));
 
-  cachedTransport = transport;
-  return transport;
+  return transporter;
 }
 
-async function sendEmail({ to, subject, html, text }) {
-  const from =
-    process.env.EMAIL_FROM ||
-    process.env.SMTP_USER;
-
-  const transport = buildTransport();
-
-  if (!transport) {
-    console.log('\n--- EMAIL SKIPPED (SMTP not configured) ---');
-    console.log({ to, subject });
-    return { skipped: true };
-  }
-
+async function sendEmail({ to, subject, text, html }) {
   console.log('📨 Sending email to:', to);
 
-  const info = await transport.sendMail({
-    from,
+  const info = await getTransport().sendMail({
+    from: process.env.EMAIL_FROM,
     to,
     subject,
     text,
