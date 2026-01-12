@@ -9,6 +9,7 @@ function getTransport() {
     host: 'smtp.gmail.com',
     port: 587,
     secure: false, // MUST be false for 587
+    requireTLS:true;
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
