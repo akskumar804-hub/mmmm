@@ -6,12 +6,12 @@ function getTransport() {
   if (transporter) return transporter;
 
   transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
+    host: 'smtp.gmail.com',
+    port: 587,
     secure: false, // MUST be false for 587
     auth: {
-      user: process.env.SMTP_USER, // "apikey"
-      pass: process.env.SMTP_PASS  // Brevo SMTP key
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
     },
     connectionTimeout: 20000,
     greetingTimeout: 20000,
@@ -19,8 +19,8 @@ function getTransport() {
   });
 
   transporter.verify()
-    .then(() => console.log('✅ Brevo SMTP verified'))
-    .catch(err => console.error('❌ Brevo SMTP error:', err.message));
+    .then(() => console.log('✅ Gmail SMTP verified'))
+    .catch(err => console.error('❌ Gmail SMTP error:', err.message));
 
   return transporter;
 }
